@@ -171,3 +171,104 @@ The accuracy as well as precision reduced while the recall increased, meaning th
 I have observed model B has a has higher mean score than model A, that is Score for Model B is 21.8% and for model A is 21.4%
 But the variations in the recall in model B is quite poor, while in model A is much balanced, for this reason I wouldn't trust model B with new customers and would prefer model A
 
+
+Tasks:
+Run the cross-validation and give me the five scores + mean + standard deviation for:
+
+accuracy, precision, recall, F1 and ROC-AUC.
+
+Then give me your interpretation before I give you mine.
+
+In particular, answer:
+
+Is our balanced Random Forest consistently mediocre, consistently good, or is our earlier 80.36% / 22% recall result mostly an accident of one train/test split?
+
+This is an important milestone: you're moving from “my model got X%” to “how strong is the evidence that my model actually generalizes?”
+
+
+-----------------------------------
+accuracy:
+  folds: [0.8051 0.8037 0.808  0.8068 0.8111]
+  mean: 0.80694
+  std: 0.002542911716910382
+precision:
+  folds: [0.28584906 0.29181495 0.30586081 0.29739777 0.31196172]
+  mean: 0.2985768602177127
+  std: 0.009394904122520783
+recall:
+  folds: [0.20267559 0.21939799 0.22326203 0.21390374 0.21791444]
+  mean: 0.21543075849981222
+  std: 0.007046455612719967
+f1:
+  folds: [0.237182   0.25047728 0.25811437 0.24883359 0.25659189]
+  mean: 0.2502398274031494
+  std: 0.007414823814967687
+roc_auc:
+  folds: [0.64916242 0.65634997 0.64443565 0.665814   0.65421529]
+  mean: 0.6539954670025689
+  std: 0.007211353347171362
+
+The scores across the 5 groups are generally well balanced, and  has less deviations, i can see the folds, improve consitently.
+Thought the roc_auc is slightly average  and remains releatively stable.
+
+
+feature_importance = pd.DataFrame({
+    "feature": X.columns,
+    "importance": balanced_model.feature_importances_
+})
+
+feature_importance = feature_importance.sort_values(
+    "importance",
+    ascending=False
+)
+
+feature_importance.head(15)
+
+
+
+import matplotlib.pyplot as plt
+
+top_features = feature_importance.head(15)
+
+plt.figure(figsize=(10, 6))
+
+plt.barh(
+    top_features["feature"],
+    top_features["importance"]
+)
+
+plt.gca().invert_yaxis()
+
+plt.xlabel("Feature Importance")
+plt.title("Top Features Influencing Booking Prediction")
+
+plt.show()
+
+accuracy 0.814
+precision 0.368
+recall 0.34
+f1 0.353
+roc_auc 0.745
+
+| Model                    |  Accuracy | Precision |    Recall |        F1 |   ROC-AUC |
+| ------------------------ |----------:|----------:|----------:|----------:|----------:|
+| Basic                    |     80.7% |     29.9% |     21.5% |     25.0% |     65.4% |
+| + booking origin         | **81.4%** | **36.8%** | **34.0%** | **35.3%** | **74.5%** |
+| + booking origin + route |    82.27% |     40.1% |    37.48% |    38.74% |    78.33% |
+
+
+How well does our model predict booking completion?
+What information appears most useful?
+What limitation should BA know about?
+
+
+our model predicts booking completion using random forest classifier,
+which has a balanced wieight and places greater feature importance on
+purchase_lead as well length_of_stay ,flight_hour  and other features respectively to do the prediction
+it has an accuracy of 82.27%
+ROC-AUC os 78.33% meaning model is more than 70% more likely to rank completed bookings over non completed ones.
+
+According to our feature importance analysis  the purchase_lead is really useful,
+as well as the route, and book origins, which we noticed adding them signifactantly boosted our models prediction.
+
+Limitation  is recall being less than average 37.48% meaning model can fail to identify more than half of customers who completed the bookings
